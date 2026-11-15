@@ -1,0 +1,139 @@
+{
+  "task_id": "EX-03",
+  "request": "Add a buffered bike lane without removing the turn lane",
+  "outcome": "unresolved",
+  "recommended_id": null,
+  "measured_width_m": {
+    "p05_m": 11.63,
+    "median_m": 11.7,
+    "p95_m": 11.77
+  },
+  "not_assessed": [
+    "minimum travel-lane width"
+  ],
+  "options": [
+    {
+      "id": "A",
+      "elements": [
+        {
+          "type": "bike_lane",
+          "width_m": null,
+          "derived": true
+        },
+        {
+          "type": "buffer",
+          "width_m": 0.6
+        },
+        {
+          "type": "travel_lane",
+          "width_m": 3.3
+        },
+        {
+          "type": "turn_lane",
+          "width_m": 3
+        },
+        {
+          "type": "travel_lane",
+          "width_m": 3.3
+        }
+      ],
+      "criteria": {
+        "markings_changed_m": 180,
+        "parking_removed": 0,
+        "elements_changed": 2,
+        "lowest_p": 0.4
+      },
+      "checks": [
+        {
+          "rule_id": "R2",
+          "element": "bike_lane",
+          "station_m": 0,
+          "outcome": "indeterminate",
+          "p_meet": 0.4,
+          "threshold_m": 1.524,
+          "p05_m": 1.43,
+          "median_m": 1.5,
+          "p95_m": 1.57
+        },
+        {
+          "rule_id": "R2",
+          "element": "bike_lane",
+          "station_m": 60,
+          "outcome": "met",
+          "p_meet": 0.96,
+          "threshold_m": 1.524,
+          "p05_m": 1.53,
+          "median_m": 1.6,
+          "p95_m": 1.67
+        },
+        {
+          "rule_id": "R4",
+          "element": "buffer",
+          "station_m": 0,
+          "outcome": "met",
+          "p_meet": 1,
+          "threshold_m": 0.61,
+          "p05_m": 0.61,
+          "median_m": 0.61,
+          "p95_m": 0.61
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "elements": [
+        {
+          "type": "bike_lane",
+          "width_m": null,
+          "derived": true
+        },
+        {
+          "type": "buffer",
+          "width_m": 0.3
+        },
+        {
+          "type": "travel_lane",
+          "width_m": 3.3
+        },
+        {
+          "type": "turn_lane",
+          "width_m": 3
+        },
+        {
+          "type": "travel_lane",
+          "width_m": 3.3
+        }
+      ],
+      "criteria": {
+        "markings_changed_m": 180,
+        "parking_removed": 0,
+        "elements_changed": 2,
+        "lowest_p": 0
+      },
+      "checks": [
+        {
+          "rule_id": "R2",
+          "element": "bike_lane",
+          "station_m": 0,
+          "outcome": "met",
+          "p_meet": 1,
+          "threshold_m": 1.524,
+          "p05_m": 1.73,
+          "median_m": 1.8,
+          "p95_m": 1.87
+        },
+        {
+          "rule_id": "R4",
+          "element": "buffer",
+          "station_m": 0,
+          "outcome": "not_met",
+          "p_meet": 0,
+          "threshold_m": 0.61,
+          "p05_m": 0.3,
+          "median_m": 0.3,
+          "p95_m": 0.3
+        }
+      ]
+    }
+  ]
+}
