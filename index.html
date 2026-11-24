@@ -4,146 +4,267 @@
 <meta charset="utf-8">
 <link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Street Design Assistant: result viewer (Design 1 prototype)</title>
+<title>Street Design Assistant: result viewer prototypes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#121212; --panel:#1a1a1a; --line:#3a3a3a; --text:#e9ecef; --muted:#9aa0a6;
-  --met:#51cf66; --notmet:#ff6b6b; --indet:#ffa94d; --na:#74c0fc;
-  --bike:#1c7ed6; --buffer:#9c6b12; --travel:#3d4247; --turn:#2b8a3e; --parking:#6741d9; --other:#5c5f66;
+  /* surfaces + ink */
+  --bg:#f5f3ee; --panel:#ffffff; --sunk:#faf8f4; --line:#e3ded4; --line-strong:#cdc6b8;
+  --text:#1c2327; --muted:#5f686d; --faint:#8a9296;
+  --accent:#1d5b86; --accent-soft:#e7f0f7;
+  /* check states */
+  --met:#1d7a48; --met-bg:#e7f3ec;
+  --notmet:#b3261e; --notmet-bg:#fbeceb;
+  --indet:#9a5a00; --indet-bg:#fdf1de;
+  --na:#53657c; --na-bg:#edf1f5;
+  /* street elements */
+  --bike:#3478a6; --buffer:#e5bf55; --travel:#424a53; --turn:#5c6673; --parking:#a7b0ba; --other:#c4c9cd;
+  --curb:#bfb8aa;
+  --serif:"Roboto Slab",Georgia,serif;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-h1{font-size:20px;font-weight:600;margin:0}
-h2{font-size:15px;font-weight:600;margin:0 0 8px}
-.wrap{max-width:1280px;margin:0 auto;padding:16px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
-.muted{color:var(--muted)}
-.small{font-size:12px}
-/* top row */
-.top{display:grid;grid-template-columns:minmax(260px,1.1fr) minmax(220px,0.9fr) minmax(260px,1.4fr);gap:12px;margin:12px 0}
-.status{border-radius:12px;padding:14px 16px;border:2px solid var(--line);display:flex;gap:12px;align-items:center;min-height:88px}
-.status .icon{font-size:30px;line-height:1;width:34px;text-align:center}
-.status .word{font-size:24px;font-weight:600}
-.status.feasible{border-color:var(--met);color:var(--met)}
-.status.infeasible,.status.error{border-color:var(--notmet);color:var(--notmet)}
-.status.unresolved{border-color:var(--indet);color:var(--indet)}
-.status.idle,.status.loading{color:var(--muted)}
-select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
-.request q{display:block;margin-top:4px}
-/* main grid */
-.main{display:grid;grid-template-columns:260px minmax(0,1fr) 340px;gap:12px}
-.options{display:flex;flex-direction:column;gap:8px;max-height:760px;overflow:auto}
-.opt{all:unset;cursor:pointer;display:block;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.opt:focus-visible{outline:2px solid var(--na)}
-.opt.sel{border:2px solid var(--text);background:#202224}
-.opt .head{display:flex;justify-content:space-between;align-items:center;font-weight:600}
-.tag{font-size:11px;font-weight:600;border:1px solid var(--met);color:var(--met);border-radius:6px;padding:0 6px}
-.diff{font-size:12px;margin:6px 0;padding:0;list-style:none}
-.diff .add{color:var(--met)} .diff .rem{color:var(--notmet)} .diff .mod{color:var(--indet)}
-.crit{font-size:12px;color:var(--muted)}
-/* states */
-.st-met{color:var(--met)} .st-not_met{color:var(--notmet)} .st-indeterminate{color:var(--indet)} .st-not_assessed{color:var(--na)} .st-no_data{color:var(--muted)}
-/* cross-section */
-.rowlabel{display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px}
-.strips{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;min-height:58px}
-.strip{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-size:12px;padding:4px 2px;border-right:1px solid var(--bg);color:#fff;min-width:0;overflow:hidden}
-.strip:last-child{border-right:none}
-.strip b{font-weight:600}
-.derived{background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.18) 6px 8px)}
-.chg{font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-bottom:2px}
-.topdown{display:flex;height:150px;border-left:3px solid #ced4da;border-right:3px solid #ced4da;margin-top:6px}
-.lane{position:relative;background-image:repeating-linear-gradient(-60deg,currentColor 0 2px,transparent 2px 9px);opacity:.75}
-.lane+.lane{border-left:2px dashed rgba(255,255,255,.55)}
-.curb{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
-.toggle{font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer}
-/* checks */
-.check{display:grid;grid-template-columns:22px 108px 1fr;gap:6px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
-.check .ic{font-size:16px;line-height:1.2;text-align:center}
-.check .lab{font-weight:600}
-.ph{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted)}
-.phgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
-.empty{color:var(--muted);text-align:center;padding:40px 10px}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:-.005em}
+h1{font-size:19px}
+h2{font-size:16px;margin-bottom:10px}
+h3{font-size:14px}
+button{font:inherit;color:inherit}
+.muted{color:var(--muted)} .small{font-size:12.5px} .faint{color:var(--faint)}
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- app bar ---------- */
+.appbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.appbar-in{max-width:1320px;margin:0 auto;padding:12px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;margin-right:auto}
+.brand .sub{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.tab{all:unset;cursor:pointer;padding:7px 14px;border-radius:9px;display:flex;gap:9px;align-items:center;font-weight:600;font-size:14px;color:var(--muted);transition:background .15s,color .15s}
+.tab .n{font-family:var(--serif);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;border:1.5px solid currentColor}
+.tab:hover{color:var(--text);background:#fff}
+.tab[aria-selected="true"]{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(29,91,134,.35)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.picker{display:flex;flex-direction:column;gap:2px;min-width:250px}
+.picker label{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+select{background:#fff;color:var(--text);border:1px solid var(--line-strong);border-radius:9px;padding:8px 10px;font:inherit;font-size:14px}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+.wrap{max-width:1320px;margin:0 auto;padding:20px}
+.design-intro{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
+.design-intro h2{font-size:22px;margin:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(40,30,10,.04)}
+.empty{color:var(--faint);text-align:center;padding:36px 10px;font-size:13.5px}
 .legend{font-size:12px;color:var(--muted);margin-top:8px}
-@media (max-width:1000px){.top,.main{grid-template-columns:1fr}.options{max-height:none}}
+.ph{border:1px dashed var(--line-strong);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--muted);background:var(--sunk)}
+
+/* ---------- status ---------- */
+.status{border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center;min-height:84px;border:1.5px solid var(--line);background:var(--panel)}
+.status .icon{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:800;color:#fff;background:var(--faint)}
+.status .word{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.15}
+.status .reason{font-size:13.5px;color:var(--muted)}
+.status.feasible{border-color:var(--met);background:var(--met-bg)} .status.feasible .icon{background:var(--met)} .status.feasible .word{color:var(--met)}
+.status.infeasible,.status.error{border-color:var(--notmet);background:var(--notmet-bg)} .status.infeasible .icon,.status.error .icon{background:var(--notmet)} .status.infeasible .word,.status.error .word{color:var(--notmet)}
+.status.unresolved{border-color:var(--indet);background:var(--indet-bg)} .status.unresolved .icon{background:var(--indet)} .status.unresolved .word{color:var(--indet)}
+.status.idle .word,.status.loading .word{font-size:18px;color:var(--muted)}
+.status.idle .icon{background:var(--line);color:var(--muted)}
+.status.loading .icon{background:transparent;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- request ---------- */
+.req q{display:block;font-family:var(--serif);font-size:16px;line-height:1.4;margin-top:4px;quotes:"“" "”"}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- pills + checks ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.met{color:var(--met);background:var(--met-bg)} .pill.notmet{color:var(--notmet);background:var(--notmet-bg)}
+.pill.indet{color:var(--indet);background:var(--indet-bg)} .pill.na{color:var(--na);background:var(--na-bg)} .pill.muted{background:var(--sunk)}
+.c-met{color:var(--met)} .c-notmet{color:var(--notmet)} .c-indet{color:var(--indet)} .c-na{color:var(--na)} .c-muted{color:var(--faint)}
+.check{display:grid;grid-template-columns:128px 1fr;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.check:last-child{border-bottom:none}
+.check.wide{grid-template-columns:130px 1fr 260px;align-items:center}
+.check .rule{font-weight:600}
+.gauge-na{font-size:12px;color:var(--faint);text-align:center;border:1px dashed var(--line-strong);border-radius:8px;padding:8px}
+
+/* ---------- cross-section ---------- */
+.rowlabel{display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px;font-size:13.5px}
+.rowlabel:first-child{margin-top:0}
+.strips{display:flex;border-radius:10px;overflow:hidden;min-height:60px;border:1px solid var(--line)}
+.strip{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-size:12px;line-height:1.3;padding:5px 3px;border-right:2px solid #fff;min-width:0;overflow:hidden}
+.strip:last-child{border-right:none}
+.strip b{font-weight:700}
+.derived{background-image:repeating-linear-gradient(45deg,transparent 0 7px,rgba(255,255,255,.22) 7px 9px)}
+.chg{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;padding:0 5px;border-radius:4px;background:rgba(255,255,255,.9);color:var(--text)}
+.topdown{display:flex;height:120px;border-left:4px solid var(--curb);border-right:4px solid var(--curb);margin-top:6px;border-radius:2px;overflow:hidden}
+.lane{position:relative}
+.lane.buffer-l{background-image:repeating-linear-gradient(-45deg,#fff 0 3px,transparent 3px 11px)}
+.lane+.lane.car{box-shadow:inset 2px 0 0 0 rgba(255,255,255,.0)}
+.lane.car+.lane.car::before{content:"";position:absolute;left:-1px;top:0;bottom:0;border-left:2px dashed rgba(255,255,255,.75)}
+.curbnote{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+.toggle{font-size:13px;display:inline-flex;gap:7px;align-items:center;cursor:pointer;color:var(--muted)}
+.toggle input{accent-color:var(--accent);width:15px;height:15px}
+
+/* ================= DESIGN 1: interactive ================= */
+.d1-top{display:grid;grid-template-columns:minmax(280px,1fr) minmax(300px,1.3fr);gap:14px;margin-bottom:14px}
+.d1-main{display:grid;grid-template-columns:270px minmax(0,1fr) 350px;gap:14px}
+.options{display:flex;flex-direction:column;gap:8px}
+.opt{all:unset;cursor:pointer;display:block;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;background:#fff;transition:border-color .15s,box-shadow .15s}
+.opt:hover{border-color:var(--line-strong)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.opt .head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700}
+.tag{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--met);border-radius:5px;padding:1px 7px}
+.diff{font-size:12.5px;margin:7px 0;padding:0;list-style:none}
+.diff .add{color:var(--met)} .diff .rem{color:var(--notmet)}
+.crit{font-size:12px;color:var(--muted)}
+.phgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+
+/* ================= DESIGN 2: report ================= */
+.report{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.rep-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.rep-head .where{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.2}
+.btn{cursor:pointer;border:1px solid var(--line-strong);background:#fff;border-radius:9px;padding:7px 13px;font-size:13px;font-weight:600}
+.btn:hover{background:var(--sunk)}
+.sec-title{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.sec-title h2{margin:0}
+.count{font-family:var(--serif);font-weight:700;color:#fff;background:var(--accent);border-radius:7px;padding:0 8px;font-size:14px}
+.reasons{list-style:none;margin:6px 0 0;padding:0}
+.reasons li{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.reasons li:last-child{border-bottom:none}
+.reasons .x{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800}
+details.fold{border:1px solid var(--line);border-radius:14px;background:#fff}
+details.fold>summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:600;display:flex;gap:10px;align-items:center}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:"›";font-size:20px;line-height:1;color:var(--muted);transition:transform .15s}
+details.fold[open]>summary::before{transform:rotate(90deg)}
+details.fold .body{padding:0 16px 14px}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:6px 14px;font-size:13.5px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+
+/* ================= DESIGN 3: street first ================= */
+.d3-top{display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,1.2fr);gap:14px;margin-bottom:14px}
+.opttabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.otab{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-weight:700;font-size:14px}
+.otab:hover{border-color:var(--line-strong)}
+.otab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.otab.sel{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.otab .tag{font-size:9.5px}
+.critline{font-size:13px;color:var(--muted);margin:4px 0 14px}
+.critline b{color:var(--text)}
+.d3-main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;align-items:start}
+.road{display:grid;grid-template-columns:140px minmax(0,1fr);column-gap:12px;margin-top:6px}
+.road-labels{display:flex;flex-direction:column;padding:4px 0}
+.road-labels div{display:flex;flex-direction:column;justify-content:center;font-size:12.5px;line-height:1.25;border-bottom:1px solid transparent}
+.road-labels b{font-weight:700}
+.road-body{position:relative;padding:44px 0 0}
+.road-asph{border-top:4px solid var(--curb);border-bottom:4px solid var(--curb);display:flex;flex-direction:column}
+.band{position:relative;overflow:hidden}
+.band.car+.band.car::before{content:"";position:absolute;left:0;right:0;top:-1px;border-top:2px dashed rgba(255,255,255,.75)}
+.band.buffer-b{background-image:repeating-linear-gradient(-45deg,#fff 0 3px,transparent 3px 12px)}
+.band .arrows{position:absolute;inset:0;display:flex;justify-content:space-around;align-items:center;color:rgba(255,255,255,.45);font-size:18px;pointer-events:none}
+.flag{all:unset;cursor:pointer;position:absolute;top:0;bottom:0;width:0;transform:translateX(-1px)}
+.flag .pole{position:absolute;top:30px;bottom:0;left:0;border-left:2px solid currentColor;opacity:.8}
+.flag .head{position:absolute;top:0;left:-15px;width:30px;height:30px;border-radius:8px 8px 8px 2px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;background:currentColor;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.flag .head span{color:#fff}
+.flag:hover .head{transform:translateY(-2px)}
+.flag.sel .head{outline:3px solid var(--text);outline-offset:2px}
+.flag:focus-visible .head{outline:3px solid var(--accent);outline-offset:2px}
+.road-axis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:5px}
+.road-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--muted)}
+.station-panel{position:sticky;top:96px}
+.sp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.xbtn{all:unset;cursor:pointer;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--muted);font-size:18px}
+.xbtn:hover{background:var(--sunk);color:var(--text)}
+.xbtn:focus-visible{outline:2px solid var(--accent)}
+.mini{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin-bottom:4px}
+.mini div{display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;padding:7px 2px;border-right:2px solid #fff;min-width:0}
+.mini div:last-child{border-right:none}
+.station-panel .check{grid-template-columns:118px 1fr}
+
+@media (max-width:1100px){
+  .d1-main{grid-template-columns:1fr 1fr}.d1-main>:first-child{grid-column:1/-1}
+  .d3-main{grid-template-columns:1fr}.station-panel{position:static}
+}
+@media (max-width:760px){
+  .d1-top,.d1-main,.d3-top{grid-template-columns:1fr}
+  .check.wide{grid-template-columns:120px 1fr}.check.wide>:last-child{grid-column:1/-1}
+  .road{grid-template-columns:96px minmax(0,1fr)}
+  .kv{grid-template-columns:1fr}
+}
+@media print{
+  .appbar,.no-print{display:none!important}
+  body{background:#fff}
+  details.fold{break-inside:avoid}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Street Design Assistant: result viewer</h1>
-  <div class="small muted">Design 1 prototype. Reads a design record and displays it; it computes nothing new. All demo values are made up.</div>
-
-  <div class="top">
-    <div id="status" class="status idle" role="status" aria-live="polite"></div>
-    <div class="panel">
-      <label for="file" class="small muted">Design record</label>
+<header class="appbar">
+  <div class="appbar-in">
+    <div class="brand">
+      <h1>Street Design Assistant</h1>
+      <span class="sub">Result viewer: three prototype designs. All demo values are made up.</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Design">
+      <button class="tab" role="tab" data-design="1"><span class="n">1</span>Interactive</button>
+      <button class="tab" role="tab" data-design="2"><span class="n">2</span>Report</button>
+      <button class="tab" role="tab" data-design="3"><span class="n">3</span>Street first</button>
+    </nav>
+    <div class="picker">
+      <label for="file">Design record</label>
       <select id="file"></select>
-      <div id="constraints" class="small muted" style="margin-top:6px"></div>
-    </div>
-    <div class="panel request"><span class="small muted">Request</span><div id="request" class="muted" style="margin-top:4px">The request will show here once a file is selected.</div></div>
-  </div>
-
-  <div class="main">
-    <section class="panel" aria-label="Options">
-      <h2>Options <span class="small muted">(ranked)</span></h2>
-      <div id="options" class="options"><div class="empty small">No file selected.</div></div>
-    </section>
-
-    <section class="panel" aria-label="Cross-section">
-      <h2>Cross-section</h2>
-      <div id="xs"><div class="empty">Select a design record to see the street.</div></div>
-    </section>
-
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <section class="panel" aria-label="Width along the street">
-        <h2 id="chartTitle">Width along the street</h2>
-        <div id="chart"><div class="empty small">No data.</div></div>
-      </section>
-      <section class="panel" aria-label="Checks">
-        <h2>Checks</h2>
-        <div id="checks"><div class="empty small">No data.</div></div>
-        <div class="legend">✓ Met · ✕ Not met · ? Indeterminate (measure in the field) · ⊘ Not assessed (not checked)</div>
-      </section>
     </div>
   </div>
+</header>
 
-  <div class="phgrid">
-    <div class="ph">Sight distance: no data yet</div>
-    <div class="ph">Conflict points: no data yet</div>
-    <div class="ph">Cost and safety effect: no data yet</div>
-    <div class="ph">Street profile (owner, class, traffic): no data yet</div>
-  </div>
-</div>
+<main class="wrap" id="app" aria-live="polite"></main>
 
 <script>
+/* ======================================================================
+   Shared data + helpers. The page computes nothing new: every number on
+   screen comes from the record (converted from metres to feet).
+   ====================================================================== */
 const DEMOS = [
   {file:"records/example1.json", label:"10th St, block 2 (feasible demo)"},
   {file:"records/example2.json", label:"10th St, block 3 (infeasible demo)"},
   {file:"records/example3.json", label:"10th St, block 4 (unresolved demo)"},
   {file:"records/missing-file.json", label:"Broken file (error demo)"}
 ];
+const DESIGNS = {
+  1:{name:"Interactive", blurb:"Everything on one screen: pick an option, compare it with today, read its checks."},
+  2:{name:"Report", blurb:"A single page you read top to bottom: the answer first, then why, then the details."},
+  3:{name:"Street first", blurb:"The street is the main view. Flags mark each station; click one to see what was checked there."}
+};
 const FT = 3.28084;
 const ft = (m, d=1) => (m*FT).toFixed(d);
+const CAR = new Set(["travel_lane","turn_lane"]);
 const TYPES = {
-  bike_lane:{label:"Bike lane", color:"var(--bike)"},
-  buffer:{label:"Buffer", color:"var(--buffer)"},
-  travel_lane:{label:"Travel lane", color:"var(--travel)"},
-  turn_lane:{label:"Turn lane", color:"var(--turn)"},
-  parking_lane:{label:"Parking", color:"var(--parking)"},
-  cycle_track:{label:"Cycle track", color:"var(--bike)"},
-  median:{label:"Median", color:"var(--other)"},
-  shoulder:{label:"Shoulder", color:"var(--other)"},
-  gutter:{label:"Gutter", color:"var(--other)"}
+  bike_lane:{label:"Bike lane", color:"var(--bike)", ink:"#fff"},
+  buffer:{label:"Buffer", color:"var(--buffer)", ink:"#3b2e05"},
+  travel_lane:{label:"Travel lane", color:"var(--travel)", ink:"#fff"},
+  turn_lane:{label:"Turn lane", color:"var(--turn)", ink:"#fff"},
+  parking_lane:{label:"Parking", color:"var(--parking)", ink:"#1c2327"},
+  cycle_track:{label:"Cycle track", color:"var(--bike)", ink:"#fff"},
+  median:{label:"Median", color:"var(--other)", ink:"#1c2327"},
+  shoulder:{label:"Shoulder", color:"var(--other)", ink:"#1c2327"},
+  gutter:{label:"Gutter", color:"var(--other)", ink:"#1c2327"}
 };
-const typeInfo = t => TYPES[t] || {label:t, color:"var(--other)"};
+const typeInfo = t => TYPES[t] || {label:t, color:"var(--other)", ink:"#1c2327"};
 const STATE = {
-  met:{icon:"✓", word:"Met"}, not_met:{icon:"✕", word:"Not met"},
-  indeterminate:{icon:"?", word:"Indeterminate"}, not_assessed:{icon:"⊘", word:"Not assessed"},
-  no_data:{icon:"–", word:"No data"}
+  met:{icon:"✓", word:"Met", tok:"met"},
+  not_met:{icon:"✕", word:"Not met", tok:"notmet"},
+  indeterminate:{icon:"?", word:"Indeterminate", tok:"indet"},
+  not_assessed:{icon:"⊘", word:"Not assessed", tok:"na"},
+  no_data:{icon:"–", word:"No data", tok:"muted"}
 };
+const stateOf = s => STATE[s] || STATE.no_data;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $ = id => document.getElementById(id);
+const plural = (n, one, many) => `${n} ${n===1?one:many}`;
 
-let rec = null, selected = null, showBefore = true;
+const S = {design:1, demo:"", phase:"idle", err:"", rec:null, sel:null, showBefore:true, station:null};
 
 /* Display-only summary of an option, using the Section 1 rule:
    any check not met -> not met; else any indeterminate -> indeterminate; else met. */
@@ -154,190 +275,396 @@ function optionStatus(o){
   if (c.some(x => x.outcome === "indeterminate")) return "indeterminate";
   return "met";
 }
-function derivedRange(o, type){
-  const c = (o.checks||[]).filter(x => x.element === type && x.p05_m != null);
+function derivedRange(o, type, station){
+  const c = (o.checks||[]).filter(x => x.element === type && x.p05_m != null && (station == null || x.station_m === station));
   if (!c.length) return null;
   return {lo:Math.min(...c.map(x=>x.p05_m)), hi:Math.max(...c.map(x=>x.p95_m)), mid:c[0].median_m};
 }
-function elWidth(o, e){
+function elWidth(o, e, station){
   if (!e.derived) return e.width_m == null ? null : {lo:e.width_m, hi:e.width_m, mid:e.width_m};
-  return derivedRange(o, e.type);
+  return o ? (derivedRange(o, e.type, station) || derivedRange(o, e.type)) : null;
 }
+const fmtW = w => !w ? "width unknown" : (Math.abs(w.lo-w.hi) < 1e-9 ? `${ft(w.mid)} ft` : `${ft(w.lo)}–${ft(w.hi)} ft`);
+const current = () => S.rec && S.rec.options.find(o => o.id === S.sel);
 
-/* ---------- status bar ---------- */
-function setStatus(kind, word, reason){
-  const icons = {feasible:"✓", infeasible:"✕", unresolved:"?", error:"✕", idle:"", loading:"…"};
-  const s = $("status");
-  s.className = "status " + kind;
-  s.innerHTML = `<div class="icon" aria-hidden="true">${icons[kind]}</div><div><div class="word">${esc(word)}</div><div class="small">${esc(reason||"")}</div></div>`;
+/* The option the explanation centres on: the recommended one, else the one closest to passing. */
+function focusOption(R){
+  if (R.recommended_id) { const o = R.options.find(x => x.id === R.recommended_id); if (o) return o; }
+  const ind = R.options.find(o => optionStatus(o) === "indeterminate");
+  if (ind) return ind;
+  return R.options.slice().sort((a,b) => (b.criteria?.lowest_p ?? 0) - (a.criteria?.lowest_p ?? 0))[0];
 }
-function outcomeStatus(){
-  const n = rec.options.length;
-  const st = rec.options.map(optionStatus);
+function summary(R){
+  const st = R.options.map(optionStatus), n = st.length;
   const pass = st.filter(s => s==="met").length, ind = st.filter(s => s==="indeterminate").length;
-  if (rec.outcome === "feasible") setStatus("feasible","Feasible",`${pass} of ${n} options pass every check`);
-  else if (rec.outcome === "infeasible") setStatus("infeasible","Infeasible",`0 of ${n} options pass every check`);
-  else if (rec.outcome === "unresolved") setStatus("unresolved","Unresolved",`0 of ${n} pass; ${ind} need${ind===1?"s":""} a field measurement`);
-  else setStatus("error","Error",`Unknown outcome "${rec.outcome}" in this file`);
+  if (R.outcome === "feasible") return {kind:"feasible", icon:"✓", word:"Feasible", reason:`${pass} of ${n} options pass every check`};
+  if (R.outcome === "infeasible") return {kind:"infeasible", icon:"✕", word:"Infeasible", reason:`0 of ${n} options pass every check`};
+  if (R.outcome === "unresolved") return {kind:"unresolved", icon:"?", word:"Unresolved", reason:`0 of ${n} pass; ${ind} need${ind===1?"s":""} a field measurement`};
+  return {kind:"error", icon:"✕", word:"Error", reason:`Unknown outcome "${R.outcome}" in this file`};
 }
+function failReason(o){
+  const s = optionStatus(o);
+  if (s === "no_data") return "No checks in this file";
+  if (s === "met") return "Passes every check (ranked lower)";
+  const c = o.checks.find(x => x.outcome === s);
+  const lab = typeInfo(c.element).label, thr = (c.threshold_m*FT).toFixed(0);
+  return s === "not_met" ? `${lab} under ${thr} ft (${c.rule_id})` : `${lab} too close to call (${c.rule_id}): needs a field measurement`;
+}
+const sortChecks = cs => { const ord = {not_met:0, indeterminate:1, met:2}; return (cs||[]).slice().sort((a,b)=>(ord[a.outcome]??3)-(ord[b.outcome]??3)); };
 
-/* ---------- options ---------- */
-function diffLines(o){
-  const before = rec.existing_elements || [];
-  if (!before.length) return "";
-  const afterTypes = o.elements.map(e=>e.type), beforeTypes = before.map(e=>e.type);
-  const out = [];
-  before.forEach(e => { if (!afterTypes.includes(e.type)) out.push(`<li class="rem">− ${typeInfo(e.type).label} ${ft(e.width_m)} ft</li>`); });
-  o.elements.forEach(e => {
-    const w = elWidth(o,e), txt = w ? (w.lo===w.hi ? `${ft(w.mid)} ft` : `${ft(w.lo)}–${ft(w.hi)} ft`) : "width unknown";
-    if (!beforeTypes.includes(e.type)) out.push(`<li class="add">+ ${typeInfo(e.type).label} ${txt}</li>`);
+/* ---------- shared components ---------- */
+function statusHTML(){
+  let k;
+  if (S.phase === "idle") k = {kind:"idle", icon:"", word:"Select a demo file to get started…", reason:"Use the Design record menu at the top right."};
+  else if (S.phase === "loading") k = {kind:"loading", icon:"", word:`Loading ${DEMOS[S.demo].label}…`, reason:""};
+  else if (S.phase === "error") k = {kind:"error", icon:"✕", word:"Error", reason:S.err};
+  else k = summary(S.rec);
+  return `<div class="status ${k.kind}" role="status"><div class="icon" aria-hidden="true">${k.icon}</div><div><div class="word">${esc(k.word)}</div><div class="reason">${esc(k.reason)}</div></div></div>`;
+}
+function requestHTML(){
+  const R = S.rec;
+  if (!R) return `<div class="req"><div class="eyebrow">Request</div><div class="muted" style="margin-top:6px">The request will show here once a file is selected.</div></div>`;
+  const where = [R.street, R.block].filter(Boolean).join(", ");
+  return `<div class="req"><div class="eyebrow">Request${where ? ` · ${esc(where)}` : ""}</div>
+    ${R.request ? `<q>${esc(R.request)}</q>` : `<div class="muted">No request in this file.</div>`}
+    <div class="chips">${R.constraints?.length ? R.constraints.map(c => `<span class="chip">${esc(c)}</span>`).join("") : `<span class="small muted">Confirmed constraints: no data</span>`}</div></div>`;
+}
+function gaugeSVG(c){
+  if (c.p05_m == null) return `<div class="gauge-na">No data</div>`;
+  const thr = c.threshold_m*FT, lo = c.p05_m*FT, hi = c.p95_m*FT, md = c.median_m*FT;
+  const a = Math.min(thr, lo) - 0.8, b = Math.max(thr, hi) + 0.8, W = 260, H = 46;
+  const X = v => 10 + (v-a)/(b-a)*(W-20);
+  const col = `var(--${stateOf(c.outcome).tok === "muted" ? "faint" : stateOf(c.outcome).tok})`;
+  const bw = Math.max(4, X(hi)-X(lo));
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Plausible width ${lo.toFixed(1)} to ${hi.toFixed(1)} ft against a ${thr.toFixed(1)} ft minimum">
+    <line x1="10" x2="${W-10}" y1="30" y2="30" stroke="var(--line-strong)" stroke-width="1.5"/>
+    <rect x="${X(lo) - (bw - (X(hi)-X(lo)))/2}" y="23" width="${bw}" height="14" rx="4" fill="${col}" opacity=".28" stroke="${col}" stroke-width="1.5"/>
+    <line x1="${X(md)}" x2="${X(md)}" y1="21" y2="39" stroke="${col}" stroke-width="2.5"/>
+    <line x1="${X(thr)}" x2="${X(thr)}" y1="14" y2="44" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <text x="${X(thr)}" y="10" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text)">min ${thr.toFixed(1)} ft</text>
+  </svg>`;
+}
+function checkRow(c, {gauge=false, showStation=true}={}){
+  const s = stateOf(c.outcome);
+  const thr = c.threshold_m*FT, range = c.p05_m != null ? `${ft(c.p05_m)}–${ft(c.p95_m)} ft` : "no data";
+  let note = "";
+  if (c.outcome === "not_met" && c.p95_m != null) note = `, ${(thr - c.p95_m*FT).toFixed(1)} ft short`;
+  if (c.outcome === "indeterminate") note = ", too close to call: measure here";
+  const p = c.p_meet != null ? ` · P = ${c.p_meet.toFixed(2)}` : "";
+  return `<div class="check ${gauge ? "wide" : ""}">
+    <span><span class="pill ${s.tok}"><span aria-hidden="true">${s.icon}</span>${s.word}</span></span>
+    <div><div class="rule">${esc(c.rule_id)}: ${typeInfo(c.element).label} ≥ ${thr.toFixed(1)} ft</div>
+    <div class="muted small">${showStation ? `Station ${ft(c.station_m,0)} ft: ` : ""}${range}${note}${p}</div></div>
+    ${gauge ? gaugeSVG(c) : ""}</div>`;
+}
+function naRows(gauge=false){
+  return (S.rec.not_assessed||[]).map(n => `<div class="check ${gauge ? "wide" : ""}">
+    <span><span class="pill na"><span aria-hidden="true">⊘</span>Not assessed</span></span>
+    <div><div class="rule">${esc(n[0].toUpperCase() + n.slice(1))}</div><div class="muted small">Rule not encoded yet, so the code did not check it</div></div>
+    ${gauge ? `<div class="gauge-na">N/A</div>` : ""}</div>`).join("");
+}
+function changeTags(o){
+  const before = S.rec.existing_elements || [];
+  const bTypes = before.map(e=>e.type), aTypes = o.elements.map(e=>e.type);
+  const after = o.elements.map((e,i) => {
+    if (!bTypes.includes(e.type)) return "New";
+    const same = before.filter(b=>b.type===e.type), idx = o.elements.slice(0,i).filter(x=>x.type===e.type).length;
+    const b = same[idx];
+    return (b && !e.derived && e.width_m != null && Math.abs(b.width_m - e.width_m) > 0.05) ? "Modified" : "";
   });
-  return `<ul class="diff">${out.join("")}</ul>`;
+  return {after, before: before.map(e => aTypes.includes(e.type) ? "" : "Removed")};
 }
-function renderOptions(){
-  const box = $("options");
-  if (!rec.options || !rec.options.length){ box.innerHTML = `<div class="empty small">No options in this file.</div>`; return; }
-  box.innerHTML = rec.options.map(o => {
-    const s = optionStatus(o), c = o.criteria || {};
-    const p = c.lowest_p == null ? "no data" : c.lowest_p.toFixed(2);
-    const mk = c.markings_changed_m == null ? "no data" : `${ft(c.markings_changed_m,0)} ft`;
-    const pk = c.parking_removed == null ? "no data" : c.parking_removed;
-    return `<button class="opt ${o.id===selected?"sel":""}" data-id="${esc(o.id)}" aria-pressed="${o.id===selected}">
-      <div class="head"><span><span class="st-${s}" title="${STATE[s].word}">${STATE[s].icon}</span> Option ${esc(o.id)}</span>
-      ${o.id===rec.recommended_id ? `<span class="tag">Recommended</span>` : `<span class="small st-${s}">${STATE[s].word}</span>`}</div>
-      ${diffLines(o)}
-      <div class="crit">Parking spaces removed: ${pk} · Lowest P: ${p} · Markings changed: ${mk}</div>
-    </button>`;
-  }).join("");
-  box.querySelectorAll(".opt").forEach(b => b.onclick = () => { selected = b.dataset.id; renderAll(); });
-}
-
-/* ---------- cross-section ---------- */
 function stripsHTML(els, o, tags){
   return `<div class="strips">` + els.map((e,i) => {
-    const t = typeInfo(e.type), w = o ? elWidth(o,e) : {lo:e.width_m,hi:e.width_m,mid:e.width_m};
-    const flex = w ? w.mid : 1;
-    const txt = !w ? "width unknown" : (w.lo===w.hi ? `${ft(w.mid)} ft` : `${ft(w.lo)}–${ft(w.hi)} ft`);
-    const tag = tags[i] ? `<span class="chg">${tags[i]}</span>` : "";
-    return `<div class="strip ${e.derived?"derived":""}" style="flex:${flex};background-color:${t.color}" title="${t.label} ${txt}">${tag}<span>${t.label}</span><b>${txt}</b></div>`;
+    const t = typeInfo(e.type), w = o ? elWidth(o,e) : {lo:e.width_m, hi:e.width_m, mid:e.width_m};
+    const txt = fmtW(w), tag = tags?.[i] ? `<span class="chg">${tags[i]}</span>` : "";
+    return `<div class="strip ${e.derived?"derived":""}" style="flex:${w ? w.mid : 1};background-color:${t.color};color:${t.ink}" title="${t.label} ${txt}">${tag}<span>${t.label}</span><b>${txt}</b></div>`;
   }).join("") + `</div>`;
 }
 function topdownHTML(els, o){
   return `<div class="topdown" aria-hidden="true">` + els.map(e => {
     const w = o ? elWidth(o,e) : {mid:e.width_m};
-    return `<div class="lane" style="flex:${w?w.mid:1};color:${typeInfo(e.type).color}"></div>`;
+    return `<div class="lane ${CAR.has(e.type)?"car":""} ${e.type==="buffer"?"buffer-l":""}" style="flex:${w ? w.mid : 1};background-color:${typeInfo(e.type).color}"></div>`;
   }).join("") + `</div>`;
 }
-function renderXS(){
-  const o = rec.options.find(x => x.id === selected);
-  const before = rec.existing_elements || [];
-  const bTypes = before.map(e=>e.type), aTypes = o.elements.map(e=>e.type);
-  const afterTags = o.elements.map((e,i) => {
-    if (!bTypes.includes(e.type)) return "New";
-    const same = before.filter(b=>b.type===e.type), idx = o.elements.slice(0,i).filter(x=>x.type===e.type).length;
-    const b = same[idx];
-    return (b && !e.derived && Math.abs(b.width_m - e.width_m) > 0.05) ? "Modified" : "";
-  });
-  const beforeTags = before.map(e => aTypes.includes(e.type) ? "" : "Removed");
-  const total = rec.measured_width_m;
-  let h = `<div class="rowlabel"><b>Option ${esc(o.id)}</b>
-    <label class="toggle"><input type="checkbox" id="cmp" ${showBefore?"checked":""}> Compare with today</label></div>`;
-  h += stripsHTML(o.elements, o, afterTags) + topdownHTML(o.elements, o);
-  if (showBefore){
+function curbHTML(){
+  const t = S.rec.measured_width_m;
+  return `<div class="curbnote">${t ? `|← Curb to curb: ${ft(t.p05_m)}–${ft(t.p95_m)} ft (measured) →|` : "Curb-to-curb width: no data"}</div>`;
+}
+function beforeAfterHTML(o, {toggle=false, topdown=true}={}){
+  const before = S.rec.existing_elements || [], tags = changeTags(o);
+  let h = `<div class="rowlabel"><b>Option ${esc(o.id)}${o.id === S.rec.recommended_id ? " (recommended)" : ""}</b>
+    ${toggle ? `<label class="toggle no-print"><input type="checkbox" data-act="before" ${S.showBefore?"checked":""}> Compare with today</label>` : ""}</div>`;
+  h += stripsHTML(o.elements, o, tags.after) + (topdown ? topdownHTML(o.elements, o) : "");
+  if (S.showBefore || !toggle){
     h += `<div class="rowlabel"><b>Before (today)</b></div>`;
-    h += before.length ? stripsHTML(before, null, beforeTags) + topdownHTML(before, null)
+    h += before.length ? stripsHTML(before, null, tags.before) + (topdown ? topdownHTML(before, null) : "")
                        : `<div class="ph">Existing street: no data in this file</div>`;
   }
-  h += total ? `<div class="curb">|— Curb to curb: ${ft(total.p05_m)}–${ft(total.p95_m)} ft (measured) —|</div>` : `<div class="curb">Curb-to-curb width: no data</div>`;
-  h += `<div class="legend">Hatched strip = derived width (whatever is left over), shown as a range because the measurement is uncertain.</div>`;
-  $("xs").innerHTML = h;
-  $("cmp").onchange = ev => { showBefore = ev.target.checked; renderXS(); };
+  return h + curbHTML() + `<div class="legend">Hatched strip = derived width (whatever is left over), shown as a range because the measurement is uncertain.</div>`;
 }
-
-/* ---------- chart ---------- */
-function renderChart(){
-  const o = rec.options.find(x => x.id === selected);
+function chartHTML(o, mark){
   const d = o.elements.find(e => e.derived);
   const pts = (o.checks||[]).filter(c => d && c.element === d.type && c.p05_m != null);
-  if (!pts.length){ $("chartTitle").textContent = "Width along the street"; $("chart").innerHTML = `<div class="empty small">No data.</div>`; return; }
+  if (!pts.length) return {title:"Width along the street", html:`<div class="empty">No data.</div>`};
   const rule = pts[0].rule_id, series = pts.filter(c => c.rule_id === rule).sort((a,b)=>a.station_m-b.station_m);
-  $("chartTitle").textContent = `${typeInfo(d.type).label} width along the street`;
   const thr = series[0].threshold_m*FT;
   const vals = series.flatMap(c => [c.p05_m*FT, c.p95_m*FT]).concat([thr]);
   const ymin = Math.floor((Math.min(...vals)-0.3)*2)/2, ymax = Math.ceil((Math.max(...vals)+0.3)*2)/2;
-  const W=320,H=180,L=40,R=26,T=12,B=40;
+  const W=320, H=184, L=40, R=22, T=14, B=40;
   const s0 = series[0].station_m, s1 = series[series.length-1].station_m;
   const X = s => series.length===1 ? (L+W-R)/2 : L + (s-s0)/(s1-s0)*(W-L-R);
   const Y = v => T + (ymax-v)/(ymax-ymin)*(H-T-B);
-  const xs = series.length===1 ? [X(s0)-60, X(s0)+60] : null;
-  const px = (c,i) => xs ? xs[i] : X(c.station_m);
-  const pseries = xs ? [series[0], series[0]] : series;
-  const top = pseries.map((c,i)=>`${px(c,i)},${Y(c.p95_m*FT)}`), bot = pseries.map((c,i)=>`${px(c,i)},${Y(c.p05_m*FT)}`).reverse();
-  let g = `<polygon points="${top.concat(bot).join(" ")}" fill="var(--met)" opacity="0.25"/>`;
-  g += `<polyline points="${pseries.map((c,i)=>`${px(c,i)},${Y(c.median_m*FT)}`).join(" ")}" fill="none" stroke="var(--met)" stroke-width="2.5"/>`;
+  const single = series.length === 1, xs = single ? [X(s0)-60, X(s0)+60] : null;
+  const px = (c,i) => single ? xs[i] : X(c.station_m);
+  const ps = single ? [series[0], series[0]] : series;
+  const col = "var(--bike)";
+  let g = "";
+  for (let v=ymin; v<=ymax+1e-9; v+=0.5) g += `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-7}" y="${Y(v)+3.5}" text-anchor="end" font-size="10" fill="var(--muted)">${v.toFixed(1)}</text>`;
+  const top = ps.map((c,i)=>`${px(c,i)},${Y(c.p95_m*FT)}`), bot = ps.map((c,i)=>`${px(c,i)},${Y(c.p05_m*FT)}`).reverse();
+  g += `<polygon points="${top.concat(bot).join(" ")}" fill="${col}" opacity="0.2"/>`;
+  g += `<polyline points="${ps.map((c,i)=>`${px(c,i)},${Y(c.median_m*FT)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  series.forEach(c => { const tok = stateOf(c.outcome).tok; g += `<circle cx="${X(c.station_m)}" cy="${Y(c.median_m*FT)}" r="4.5" fill="var(--${tok})" stroke="#fff" stroke-width="1.5"/>`; });
   g += `<line x1="${L}" x2="${W-R}" y1="${Y(thr)}" y2="${Y(thr)}" stroke="var(--notmet)" stroke-dasharray="6 4" stroke-width="1.5"/>`;
-  g += `<text x="${W-R}" y="${Y(thr)+14}" text-anchor="end" font-size="11" fill="var(--notmet)">${esc(rule)} minimum ${thr.toFixed(1)} ft</text>`;
-  for (let v=ymin; v<=ymax+1e-9; v+=0.5) g += `<text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v.toFixed(1)}</text>`;
-  g += `<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
+  g += `<text x="${W-R}" y="${Y(thr)+14}" text-anchor="end" font-size="10.5" font-weight="600" fill="var(--notmet)">${esc(rule)} minimum ${thr.toFixed(1)} ft</text>`;
+  if (mark != null && series.some(c => c.station_m === mark)) g += `<line x1="${X(mark)}" x2="${X(mark)}" y1="${T}" y2="${H-B}" stroke="var(--text)" stroke-width="1.5" opacity=".55"/>`;
+  g += `<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line-strong)"/>`;
   series.forEach(c => g += `<text x="${X(c.station_m)}" y="${H-B+16}" text-anchor="middle" font-size="10" fill="var(--muted)">${ft(c.station_m,0)} ft</text>`);
-  g += `<text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--muted)">position along the street (station)</text><text x="4" y="${T-2}" font-size="10" fill="var(--muted)">ft</text>`;
-  $("chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Width band per station against the ${esc(rule)} minimum">${g}</svg>
-    <div class="legend">Shaded band = plausible width (p05–p95). Line = median. Dashed = rule minimum.</div>`;
+  g += `<text x="${(L+W-R)/2}" y="${H-5}" text-anchor="middle" font-size="10" fill="var(--muted)">position along the street (station)</text><text x="6" y="${T-3}" font-size="10" fill="var(--muted)">ft</text>`;
+  return {title:`${typeInfo(d.type).label} width along the street`,
+    html:`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Width band per station against the ${esc(rule)} minimum">${g}</svg>
+    <div class="legend">Shaded band = plausible width (p05–p95). Line = median. Dashed = rule minimum.</div>`};
+}
+const critText = o => {
+  const c = o.criteria || {};
+  return {
+    pk: c.parking_removed == null ? "no data" : c.parking_removed,
+    p: c.lowest_p == null ? "no data" : c.lowest_p.toFixed(2),
+    mk: c.markings_changed_m == null ? "no data" : `${ft(c.markings_changed_m,0)} ft`
+  };
+};
+
+/* ======================================================================
+   DESIGN 1: interactive dashboard
+   ====================================================================== */
+function diffLines(o){
+  const before = S.rec.existing_elements || [];
+  if (!before.length) return "";
+  const aT = o.elements.map(e=>e.type), bT = before.map(e=>e.type), out = [];
+  before.forEach(e => { if (!aT.includes(e.type)) out.push(`<li class="rem">− ${typeInfo(e.type).label} ${ft(e.width_m)} ft</li>`); });
+  o.elements.forEach(e => { if (!bT.includes(e.type)) out.push(`<li class="add">+ ${typeInfo(e.type).label} ${fmtW(elWidth(o,e))}</li>`); });
+  return `<ul class="diff">${out.join("")}</ul>`;
+}
+function design1(){
+  const R = S.rec, o = current();
+  let h = `<div class="d1-top">${statusHTML()}<div class="panel">${requestHTML()}</div></div>`;
+  const opts = !R ? `<div class="empty">No file selected.</div>` : R.options.map(x => {
+    const s = optionStatus(x), st = stateOf(s), c = critText(x);
+    return `<button class="opt ${x.id===S.sel?"sel":""}" data-act="opt" data-id="${esc(x.id)}" data-key="opt-${esc(x.id)}" aria-pressed="${x.id===S.sel}">
+      <div class="head"><span><span class="c-${st.tok}" title="${st.word}">${st.icon}</span> Option ${esc(x.id)}</span>
+      ${x.id===R.recommended_id ? `<span class="tag">Recommended</span>` : `<span class="pill ${st.tok}">${st.word}</span>`}</div>
+      ${diffLines(x)}
+      <div class="crit">Parking spaces removed: ${c.pk} · Lowest P: ${c.p} · Markings changed: ${c.mk}</div></button>`;
+  }).join("");
+  const ch = o ? chartHTML(o) : {title:"Width along the street", html:`<div class="empty">No data.</div>`};
+  h += `<div class="d1-main">
+    <section class="panel" aria-label="Options"><h2>Options <span class="small muted" style="font-family:var(--sans);font-weight:500">ranked</span></h2><div class="options">${opts}</div></section>
+    <section class="panel" aria-label="Cross-section"><h2>Cross-section</h2>${o ? beforeAfterHTML(o, {toggle:true}) : `<div class="empty">Select a design record to see the street.</div>`}</section>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <section class="panel" aria-label="Width along the street"><h2>${ch.title}</h2>${ch.html}</section>
+      <section class="panel" aria-label="Checks"><h2>Checks</h2>${o ? sortChecks(o.checks).map(c => checkRow(c)).join("") + naRows() : `<div class="empty">No data.</div>`}</section>
+    </div>
+  </div>
+  <div class="phgrid">
+    <div class="ph">Sight distance: no data yet</div>
+    <div class="ph">Conflict points: no data yet</div>
+    <div class="ph">Cost and safety effect: no data yet</div>
+    <div class="ph">Street profile (owner, class, traffic): no data yet</div>
+  </div>`;
+  return h;
 }
 
-/* ---------- checks ---------- */
-function renderChecks(){
-  const o = rec.options.find(x => x.id === selected);
-  const order = {not_met:0, indeterminate:1, met:2};
-  const rows = (o.checks||[]).slice().sort((a,b)=>(order[a.outcome]??3)-(order[b.outcome]??3)).map(c => {
-    const s = STATE[c.outcome] ? c.outcome : "no_data";
-    const thr = c.threshold_m*FT, range = c.p05_m!=null ? `${ft(c.p05_m)}–${ft(c.p95_m)} ft` : "no data";
-    let note = "";
-    if (c.outcome==="not_met" && c.p95_m!=null) note = `, ${(thr - c.p95_m*FT).toFixed(1)} ft short`;
-    if (c.outcome==="indeterminate") note = ", too close to call: measure here";
-    const p = c.p_meet != null ? ` · P = ${c.p_meet.toFixed(2)}` : "";
-    return `<div class="check"><span class="ic st-${s}" aria-hidden="true">${STATE[s].icon}</span><span class="lab st-${s}">${STATE[s].word}</span>
-      <span>${esc(c.rule_id)}: ${typeInfo(c.element).label} ≥ ${thr.toFixed(1)} ft<br><span class="muted small">station ${ft(c.station_m,0)} ft: ${range}${note}${p}</span></span></div>`;
-  });
-  const na = (rec.not_assessed||[]).map(n => `<div class="check"><span class="ic st-not_assessed" aria-hidden="true">⊘</span><span class="lab st-not_assessed">Not assessed</span><span>${esc(n)}<br><span class="muted small">not checked by the code</span></span></div>`);
-  $("checks").innerHTML = (rows.length ? rows.join("") : `<div class="empty small">No checks in this file.</div>`) + na.join("");
+/* ======================================================================
+   DESIGN 2: report view
+   ====================================================================== */
+function design2(){
+  const R = S.rec;
+  if (!R) return `<div class="report">${statusHTML()}<div class="panel">${requestHTML()}</div></div>`;
+  const f = focusOption(R), sm = summary(R);
+  const where = [R.street, R.block].filter(Boolean).join(", ") || "Unnamed block";
+  const label = R.recommended_id === f.id ? "Recommended" : (optionStatus(f) === "indeterminate" ? "Closest (needs a measurement)" : "Closest to passing");
+  const others = R.options.filter(o => o.id !== f.id);
+  const groups = {};
+  others.forEach(o => { const r = failReason(o); (groups[r] = groups[r] || {n:0, s:optionStatus(o)}).n++; });
+  const reasonList = Object.entries(groups).map(([r,g]) => { const st = stateOf(g.s);
+    return `<li><span class="x pill ${st.tok}" aria-hidden="true">${st.icon}</span><span><b>${plural(g.n,"option","options")}:</b> ${esc(r)}</span></li>`; }).join("");
+  const t = R.measured_width_m;
+  return `<div class="report">
+    <div class="rep-head">
+      <div><div class="eyebrow">Design record ${esc(R.task_id || "")}</div><div class="where">${esc(where)}</div></div>
+      <button class="btn no-print" data-act="print">Print or save as PDF</button>
+    </div>
+    <div class="panel">${requestHTML()}</div>
+    ${statusHTML()}
+
+    <section class="panel">
+      <div class="sec-title"><h2>What decides it</h2><span class="small muted">${label}: Option ${esc(f.id)}</span></div>
+      ${sortChecks(f.checks).map(c => checkRow(c, {gauge:true})).join("")}${naRows(true)}
+      <div class="legend">Bar = plausible width (p05–p95), thick tick = median, dashed line = rule minimum.</div>
+    </section>
+
+    ${others.length ? `<section class="panel">
+      <div class="sec-title"><h2>Why the other options ${sm.kind === "feasible" ? "weren't chosen" : "didn't pass"}</h2><span class="count">${others.length}</span></div>
+      <ul class="reasons">${reasonList}</ul>
+    </section>` : ""}
+
+    <section class="panel">
+      <h2>Before &amp; after: Option ${esc(f.id)}</h2>
+      ${beforeAfterHTML(f, {toggle:false, topdown:false})}
+    </section>
+
+    <details class="fold">
+      <summary>Every option (${R.options.length})</summary>
+      <div class="body">${R.options.map(o => { const st = stateOf(optionStatus(o)), c = critText(o);
+        return `<div class="check"><span><span class="pill ${st.tok}"><span aria-hidden="true">${st.icon}</span>${st.word}</span></span>
+          <div><div class="rule">Option ${esc(o.id)}${o.id === R.recommended_id ? " (recommended)" : ""}: ${esc(failReason(o))}</div>
+          <div class="muted small">${o.elements.map(e => `${typeInfo(e.type).label} ${fmtW(elWidth(o,e))}`).join(" · ")}</div>
+          <div class="muted small">Parking spaces removed: ${c.pk} · Lowest P: ${c.p} · Markings changed: ${c.mk}</div></div></div>`; }).join("")}</div>
+    </details>
+    <details class="fold">
+      <summary>Sources</summary>
+      <div class="body"><dl class="kv">
+        <dt>Record</dt><dd>${esc(DEMOS[S.demo].file)}${R.task_id ? ` (${esc(R.task_id)})` : ""}</dd>
+        <dt>Curb-to-curb width</dt><dd>${t ? `${ft(t.p05_m)}–${ft(t.p95_m)} ft (median ${ft(t.median_m)} ft)` : "no data"}</dd>
+        <dt>Rules applied</dt><dd>${[...new Set(R.options.flatMap(o => (o.checks||[]).map(c => c.rule_id)))].join(", ") || "no data"}</dd>
+        <dt>Not assessed</dt><dd>${(R.not_assessed||[]).map(esc).join(", ") || "none"}</dd>
+        <dt>Measurement date</dt><dd class="muted">no data yet</dd>
+        <dt>Code version</dt><dd class="muted">no data yet</dd>
+      </dl></div>
+    </details>
+  </div>`;
 }
 
-/* ---------- load ---------- */
-function renderAll(){ renderOptions(); renderXS(); renderChart(); renderChecks(); }
-function clearViews(msg){
-  $("options").innerHTML = `<div class="empty small">${msg}</div>`;
-  $("xs").innerHTML = `<div class="empty">${msg}</div>`;
-  $("chart").innerHTML = $("checks").innerHTML = `<div class="empty small">No data.</div>`;
-  $("request").textContent = "The request will show here once a file is selected.";
-  $("constraints").textContent = "";
+/* ======================================================================
+   DESIGN 3: street first
+   ====================================================================== */
+const stationsOf = o => [...new Set((o.checks||[]).map(c => c.station_m))].sort((a,b)=>a-b);
+function stationStatus(o, s){ return optionStatus({checks:(o.checks||[]).filter(c => c.station_m === s)}); }
+function worstStation(o){
+  const st = stationsOf(o);
+  return st.find(s => stationStatus(o,s) === "not_met") ?? st.find(s => stationStatus(o,s) === "indeterminate") ?? st[0] ?? null;
 }
-async function load(file, label){
-  rec = null; clearViews("Loading…");
-  setStatus("loading", `Loading ${label}…`, "");
+function roadHTML(els, o, flags){
+  const PX = 7;  /* px per ft of width */
+  const rows = els.map(e => { const w = elWidth(o, e); return {e, w, h:Math.max(24, (w ? w.mid*FT : 8)*PX)}; });
+  const stations = flags ? stationsOf(o) : [];
+  const len = Math.max(60, ...stations);
+  const xp = s => 3 + 94 * s/len;
+  const labels = rows.map(r => `<div style="height:${r.h}px"><span>${typeInfo(r.e.type).label}</span><b>${fmtW(r.w)}</b></div>`).join("");
+  const bands = rows.map(r => {
+    const t = typeInfo(r.e.type);
+    const arrows = r.e.type === "turn_lane" ? `<div class="arrows" aria-hidden="true"><span>↰</span><span>↰</span><span>↰</span></div>` : "";
+    return `<div class="band ${CAR.has(r.e.type)?"car":""} ${r.e.type==="buffer"?"buffer-b":""} ${r.e.derived?"derived":""}" style="height:${r.h}px;background-color:${t.color}">${arrows}</div>`;
+  }).join("");
+  const fl = stations.map(s => { const st = stateOf(stationStatus(o, s));
+    return `<button class="flag ${S.station===s?"sel":""}" style="left:${xp(s)}%;color:var(--${st.tok})" data-act="station" data-st="${s}" data-key="st-${s}" aria-label="Station ${ft(s,0)} ft: ${st.word}" aria-pressed="${S.station===s}">
+      <span class="pole"></span><span class="head"><span>${st.icon}</span></span></button>`; }).join("");
+  return `<div class="road"><div class="road-labels" style="padding-top:${flags ? 48 : 4}px">${labels}</div>
+    <div><div class="road-body" style="padding-top:${flags ? 44 : 0}px"><div class="road-asph">${bands}</div>${fl}</div>
+    ${flags ? `<div class="road-axis"><span>0 ft</span><span>${ft(len/2,0)} ft</span><span>${ft(len,0)} ft</span></div>` : ""}</div></div>`;
+}
+function stationPanel(o){
+  const s = S.station;
+  if (s == null) return `<aside class="panel station-panel"><h2>Station details</h2><div class="empty">Click a flag on the street to see what was checked there.</div></aside>`;
+  const cs = sortChecks((o.checks||[]).filter(c => c.station_m === s)), ch = chartHTML(o, s);
+  const mini = o.elements.map(e => { const t = typeInfo(e.type), w = elWidth(o, e, s);
+    return `<div style="flex:${w ? w.mid : 1};background:${t.color};color:${t.ink}" title="${t.label} ${fmtW(w)}">${w ? ft(w.mid) : "?"}</div>`; }).join("");
+  return `<aside class="panel station-panel" aria-label="Station details">
+    <div class="sp-head"><h2 style="margin:0">Station ${ft(s,0)} ft</h2><button class="xbtn" data-act="close" aria-label="Close station details">✕</button></div>
+    <div class="eyebrow" style="margin-bottom:6px">Cross-section here (ft, median)</div>
+    <div class="mini">${mini}</div>
+    <div class="small muted" style="margin-bottom:12px">${o.elements.map(e => typeInfo(e.type).label).join(" · ")}</div>
+    <div class="eyebrow">Checks at this station</div>
+    ${cs.map(c => checkRow(c, {showStation:false})).join("")}${naRows()}
+    <div class="eyebrow" style="margin:14px 0 4px">${ch.title}</div>${ch.html}
+  </aside>`;
+}
+function design3(){
+  const R = S.rec, o = current();
+  let h = `<div class="d3-top">${statusHTML()}<div class="panel">${requestHTML()}</div></div>`;
+  if (!R || !o) return h + `<div class="panel"><div class="empty">Select a design record to see the street.</div></div>`;
+  const c = critText(o);
+  h += `<div class="opttabs" role="tablist" aria-label="Options">${R.options.map(x => { const st = stateOf(optionStatus(x));
+    return `<button class="otab ${x.id===S.sel?"sel":""}" role="tab" aria-selected="${x.id===S.sel}" data-act="opt" data-id="${esc(x.id)}" data-key="opt-${esc(x.id)}">
+      <span class="c-${st.tok}" aria-label="${st.word}">${st.icon}</span>Option ${esc(x.id)}${x.id===R.recommended_id ? ` <span class="tag">Recommended</span>` : ""}</button>`; }).join("")}</div>
+    <div class="critline">Parking spaces removed: <b>${c.pk}</b> · Lowest P: <b>${c.p}</b> · Markings changed: <b>${c.mk}</b></div>
+    <div class="d3-main">
+      <section class="panel" aria-label="Road viewer">
+        <h2>Road viewer <span class="small muted" style="font-family:var(--sans);font-weight:500">top-down, travelling left to right</span></h2>
+        ${roadHTML(o.elements, o, true)}
+        <div class="road-foot">
+          <span>Flags show each station's result. Click one to open its details.</span>
+          <label class="toggle"><input type="checkbox" data-act="before" ${S.showBefore?"checked":""}> Show before</label>
+        </div>
+        ${S.showBefore ? `<div class="rowlabel" style="margin-top:18px"><b>Before (today)</b></div>${(R.existing_elements||[]).length ? roadHTML(R.existing_elements, null, false) : `<div class="ph">Existing street: no data in this file</div>`}` : ""}
+        ${curbHTML()}
+      </section>
+      ${stationPanel(o)}
+    </div>`;
+  return h;
+}
+
+/* ======================================================================
+   App shell: rendering, events, loading
+   ====================================================================== */
+function render(){
+  const key = document.activeElement?.dataset?.key;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(+t.dataset.design === S.design)));
+  const d = DESIGNS[S.design];
+  const intro = `<div class="design-intro no-print"><h2>Design ${S.design}: ${d.name}</h2><span class="muted small">${d.blurb}</span></div>`;
+  $("app").innerHTML = intro + (S.design === 1 ? design1() : S.design === 2 ? design2() : design3());
+  if (key) document.querySelector(`[data-key="${key}"]`)?.focus();
+}
+function setDesign(n){ S.design = n; history.replaceState(null, "", `#design-${n}`); render(); }
+
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => setDesign(+t.dataset.design));
+$("app").addEventListener("click", e => {
+  const t = e.target.closest("[data-act]"); if (!t) return;
+  const a = t.dataset.act;
+  if (a === "opt"){ S.sel = t.dataset.id; S.station = worstStation(current()); render(); }
+  else if (a === "station"){ S.station = +t.dataset.st; render(); }
+  else if (a === "close"){ S.station = null; render(); }
+  else if (a === "print") window.print();
+});
+$("app").addEventListener("change", e => { if (e.target.dataset.act === "before"){ S.showBefore = e.target.checked; render(); } });
+
+async function load(i){
+  S.demo = i; S.rec = null; S.phase = "loading"; render();
   try{
-    const r = await fetch(file, {cache:"no-store"});
+    const r = await fetch(DEMOS[i].file, {cache:"no-store"});
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    rec = await r.json();
+    const rec = await r.json();
     if (!Array.isArray(rec.options)) throw new Error("no options list");
+    if (S.demo !== i) return;
+    S.rec = rec; S.phase = "ok";
+    const f = rec.options.length ? focusOption(rec) : null;
+    S.sel = f ? f.id : null; S.station = f ? worstStation(f) : null;
   }catch(err){
-    rec = null; clearViews("Couldn't read this file.");
-    setStatus("error", "Error", `Couldn't read this file (${err.message}). It may be missing or not a valid design record.`);
-    return;
+    if (S.demo !== i) return;
+    S.phase = "error"; S.err = `Couldn't read this file (${err.message}). It may be missing or not a valid design record.`;
   }
-  $("request").textContent = rec.request ? `“${rec.request}”` : "No request in this file.";
-  $("constraints").textContent = rec.constraints?.length ? "Confirmed constraints: " + rec.constraints.join(" · ") : "Confirmed constraints: no data";
-  outcomeStatus();
-  if (!rec.options.length){ clearViews("No options in this file."); return; }
-  selected = rec.recommended_id || rec.options[0].id;
-  renderAll();
+  render();
 }
 const sel = $("file");
 sel.innerHTML = `<option value="">Select a demo file…</option>` + DEMOS.map((d,i)=>`<option value="${i}">${esc(d.label)}</option>`).join("");
-sel.onchange = () => { if (sel.value === ""){ rec=null; clearViews("No file selected."); setStatus("idle","Select a demo file to get started…",""); return; }
-  const d = DEMOS[+sel.value]; load(d.file, d.label); };
-setStatus("idle", "Select a demo file to get started…", "");
-if (location.protocol === "file:") setStatus("error","Open through a web server","Browsers block reading files from a page opened by double-click. Run: python3 -m http.server, then open http://localhost:8000");
+sel.onchange = () => { if (sel.value === ""){ S.demo = ""; S.rec = null; S.phase = "idle"; render(); } else load(+sel.value); };
+
+const m = location.hash.match(/design-([123])/);
+if (m) S.design = +m[1];
+if (location.protocol === "file:"){
+  S.phase = "error"; S.err = "Browsers block reading files from a page opened by double-click. Run: python3 -m http.server, then open http://localhost:8000";
+  render();
+} else { sel.value = "0"; load(0); }
 </script>
 </body>
 </html>

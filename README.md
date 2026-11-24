@@ -1,6 +1,12 @@
 # Street Design Assistant: result viewer
 
-Prototype of Design 1 (Task 3.1/3.2, Part B). A single static page that reads a design record (JSON) and shows the outcome, options, cross-section, width chart and checks. It computes nothing new: every number on screen comes from the record (converted from metres to feet for display).
+Prototypes for Task 3.1/3.2, Part B. One static page reads a design record (JSON) and shows it in three designs, which you switch between with the buttons at the top:
+
+1. **Interactive**: everything on one screen. Pick an option, compare it with today, read its checks.
+2. **Report**: one page read top to bottom. The answer first, then why, then the details. It can be printed or saved as a PDF.
+3. **Street first**: a top-down road view with flags at each station. Click a flag to see what was checked there.
+
+The page computes nothing new: every number on screen comes from the record (converted from metres to feet for display). The design record menu applies to all three designs. You can link to one design with `#design-1`, `#design-2` or `#design-3`.
 
 ## Run it locally
 
