@@ -46,8 +46,10 @@ button{font:inherit;color:inherit}
 .tab:hover{color:var(--text);background:#fff}
 .tab[aria-selected="true"]{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(29,91,134,.35)}
 .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.picker{display:flex;flex-direction:column;gap:2px;min-width:250px}
+.picker{display:flex;flex-direction:column;gap:6px;min-width:0}
 .picker label{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.picker select{width:100%}
+.picker .hint{font-size:12px;color:var(--muted)}
 select{background:#fff;color:var(--text);border:1px solid var(--line-strong);border-radius:9px;padding:8px 10px;font:inherit;font-size:14px}
 select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
@@ -107,7 +109,7 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .toggle input{accent-color:var(--accent);width:15px;height:15px}
 
 /* ================= DESIGN 1: interactive ================= */
-.d1-top{display:grid;grid-template-columns:minmax(280px,1fr) minmax(300px,1.3fr);gap:14px;margin-bottom:14px}
+.d1-top{display:grid;grid-template-columns:minmax(260px,1.1fr) minmax(230px,.8fr) minmax(280px,1.4fr);gap:14px;margin-bottom:14px}
 .d1-main{display:grid;grid-template-columns:270px minmax(0,1fr) 350px;gap:14px}
 .options{display:flex;flex-direction:column;gap:8px}
 .opt{all:unset;cursor:pointer;display:block;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;background:#fff;transition:border-color .15s,box-shadow .15s}
@@ -144,7 +146,10 @@ details.fold .body{padding:0 16px 14px}
 .kv dt{color:var(--muted)} .kv dd{margin:0}
 
 /* ================= DESIGN 3: street first ================= */
-.d3-top{display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,1.2fr);gap:14px;margin-bottom:14px}
+.d3-top{display:grid;grid-template-columns:minmax(260px,1fr) minmax(280px,1.3fr) minmax(230px,.8fr);gap:14px;margin-bottom:14px}
+.rep-tools{display:flex;gap:10px;align-items:flex-end;min-width:280px}
+.rep-tools .picker{flex:1}
+@media (max-width:1100px){.d1-top{grid-template-columns:1fr 1fr}.d1-top>:last-child{grid-column:1/-1}.d3-top{grid-template-columns:1fr 1fr}.d3-top>:first-child{grid-column:1/-1}}
 .opttabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .otab{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-weight:700;font-size:14px}
 .otab:hover{border-color:var(--line-strong)}
@@ -205,16 +210,13 @@ details.fold .body{padding:0 16px 14px}
   <div class="appbar-in">
     <div class="brand">
       <h1>Street Design Assistant Demo</h1>
+      <span class="sub">Select a design to see its interactive prototype</span>
     </div>
     <nav class="tabs" role="tablist" aria-label="Design">
       <button class="tab" role="tab" data-design="1"><span class="n">1</span>Interactive</button>
       <button class="tab" role="tab" data-design="2"><span class="n">2</span>Report</button>
       <button class="tab" role="tab" data-design="3"><span class="n">3</span>Street first</button>
     </nav>
-    <div class="picker">
-      <label for="file">Design record</label>
-      <select id="file"></select>
-    </div>
   </div>
 </header>
 
@@ -314,11 +316,19 @@ const sortChecks = cs => { const ord = {not_met:0, indeterminate:1, met:2}; retu
 /* ---------- shared components ---------- */
 function statusHTML(){
   let k;
-  if (S.phase === "idle") k = {kind:"idle", icon:"", word:"Select a demo file to get started…", reason:"Use the Design record menu at the top right."};
+  if (S.phase === "idle") k = {kind:"idle", icon:"", word:"Select a demo file to get started…", reason:"Choose one from the Design record menu."};
   else if (S.phase === "loading") k = {kind:"loading", icon:"", word:`Loading ${DEMOS[S.demo].label}…`, reason:""};
   else if (S.phase === "error") k = {kind:"error", icon:"✕", word:"Error", reason:S.err};
   else k = summary(S.rec);
   return `<div class="status ${k.kind}" role="status"><div class="icon" aria-hidden="true">${k.icon}</div><div><div class="word">${esc(k.word)}</div><div class="reason">${esc(k.reason)}</div></div></div>`;
+}
+function pickerHTML({hint=true}={}){
+  const opts = `<option value="" ${S.demo===""?"selected":""}>Select a demo file…</option>` +
+    DEMOS.map((d,i)=>`<option value="${i}" ${S.demo===i?"selected":""}>${esc(d.label)}</option>`).join("");
+  const R = S.rec, where = R ? [R.street, R.block].filter(Boolean).join(", ") : "";
+  return `<div class="picker no-print"><label for="file-${S.design}">Design record</label>
+    <select id="file-${S.design}" data-act="file" data-key="file">${opts}</select>
+    ${hint ? `<span class="hint">${R ? `${esc(R.task_id || "Record")}${where ? ` · ${esc(where)}` : ""}` : "Demo records; real ones will come from the backend."}</span>` : ""}</div>`;
 }
 function requestHTML(){
   const R = S.rec;
@@ -456,7 +466,7 @@ function diffLines(o){
 }
 function design1(){
   const R = S.rec, o = current();
-  let h = `<div class="d1-top">${statusHTML()}<div class="panel">${requestHTML()}</div></div>`;
+  let h = `<div class="d1-top">${statusHTML()}<div class="panel">${pickerHTML()}</div><div class="panel">${requestHTML()}</div></div>`;
   const opts = !R ? `<div class="empty">No file selected.</div>` : R.options.map(x => {
     const s = optionStatus(x), st = stateOf(s), c = critText(x);
     return `<button class="opt ${x.id===S.sel?"sel":""}" data-act="opt" data-id="${esc(x.id)}" data-key="opt-${esc(x.id)}" aria-pressed="${x.id===S.sel}">
@@ -488,7 +498,7 @@ function design1(){
    ====================================================================== */
 function design2(){
   const R = S.rec;
-  if (!R) return `<div class="report">${statusHTML()}<div class="panel">${requestHTML()}</div></div>`;
+  if (!R) return `<div class="report"><div class="rep-head"><div class="where">Report</div><div class="rep-tools">${pickerHTML({hint:false})}</div></div>${statusHTML()}<div class="panel">${requestHTML()}</div></div>`;
   const f = focusOption(R), sm = summary(R);
   const where = [R.street, R.block].filter(Boolean).join(", ") || "Unnamed block";
   const label = R.recommended_id === f.id ? "Recommended" : (optionStatus(f) === "indeterminate" ? "Closest (needs a measurement)" : "Closest to passing");
@@ -501,7 +511,7 @@ function design2(){
   return `<div class="report">
     <div class="rep-head">
       <div><div class="eyebrow">Design record ${esc(R.task_id || "")}</div><div class="where">${esc(where)}</div></div>
-      <button class="btn no-print" data-act="print">Print or save as PDF</button>
+      <div class="rep-tools">${pickerHTML({hint:false})}<button class="btn no-print" data-act="print">Print or save as PDF</button></div>
     </div>
     <div class="panel">${requestHTML()}</div>
     ${statusHTML()}
@@ -590,7 +600,7 @@ function stationPanel(o){
 }
 function design3(){
   const R = S.rec, o = current();
-  let h = `<div class="d3-top">${statusHTML()}<div class="panel">${requestHTML()}</div></div>`;
+  let h = `<div class="d3-top">${statusHTML()}<div class="panel">${requestHTML()}</div><div class="panel">${pickerHTML()}</div></div>`;
   if (!R || !o) return h + `<div class="panel"><div class="empty">Select a design record to see the street.</div></div>`;
   const c = critText(o);
   h += `<div class="opttabs" role="tablist" aria-label="Options">${R.options.map(x => { const st = stateOf(optionStatus(x));
@@ -635,7 +645,12 @@ $("app").addEventListener("click", e => {
   else if (a === "close"){ S.station = null; render(); }
   else if (a === "print") window.print();
 });
-$("app").addEventListener("change", e => { if (e.target.dataset.act === "before"){ S.showBefore = e.target.checked; render(); } });
+$("app").addEventListener("change", e => {
+  const a = e.target.dataset.act;
+  if (a === "before"){ S.showBefore = e.target.checked; render(); }
+  else if (a === "file"){ const v = e.target.value;
+    if (v === ""){ S.demo = ""; S.rec = null; S.phase = "idle"; render(); } else load(+v); }
+});
 
 async function load(i){
   S.demo = i; S.rec = null; S.phase = "loading"; render();
@@ -654,16 +669,12 @@ async function load(i){
   }
   render();
 }
-const sel = $("file");
-sel.innerHTML = `<option value="">Select a demo file…</option>` + DEMOS.map((d,i)=>`<option value="${i}">${esc(d.label)}</option>`).join("");
-sel.onchange = () => { if (sel.value === ""){ S.demo = ""; S.rec = null; S.phase = "idle"; render(); } else load(+sel.value); };
-
 const m = location.hash.match(/design-([123])/);
 if (m) S.design = +m[1];
 if (location.protocol === "file:"){
   S.phase = "error"; S.err = "Browsers block reading files from a page opened by double-click. Run: python3 -m http.server, then open http://localhost:8000";
   render();
-} else { sel.value = "0"; load(0); }
+} else load(0);
 </script>
 </body>
 </html>
