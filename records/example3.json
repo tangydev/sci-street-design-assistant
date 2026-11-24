@@ -1,6 +1,30 @@
 {
   "task_id": "EX-03",
   "request": "Add a buffered bike lane without removing the turn lane",
+  "street": "10th St",
+  "block": "block 4",
+  "constraints": [
+    "Turn lane kept",
+    "Buffer required"
+  ],
+  "existing_elements": [
+    {
+      "type": "parking_lane",
+      "width_m": 2.1
+    },
+    {
+      "type": "travel_lane",
+      "width_m": 3.3
+    },
+    {
+      "type": "turn_lane",
+      "width_m": 3.0
+    },
+    {
+      "type": "travel_lane",
+      "width_m": 3.3
+    }
+  ],
   "outcome": "unresolved",
   "recommended_id": null,
   "measured_width_m": {
@@ -39,7 +63,7 @@
       ],
       "criteria": {
         "markings_changed_m": 180,
-        "parking_removed": 0,
+        "parking_removed": 8,
         "elements_changed": 2,
         "lowest_p": 0.4
       },
@@ -106,7 +130,7 @@
       ],
       "criteria": {
         "markings_changed_m": 180,
-        "parking_removed": 0,
+        "parking_removed": 8,
         "elements_changed": 2,
         "lowest_p": 0
       },
