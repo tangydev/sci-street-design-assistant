@@ -168,14 +168,84 @@ details.fold .body{padding:0 16px 14px}
 .band{position:relative;overflow:hidden}
 .band.car+.band.car::before{content:"";position:absolute;left:0;right:0;top:-1px;border-top:2px dashed rgba(255,255,255,.75)}
 .band.buffer-b{background-image:repeating-linear-gradient(-45deg,#fff 0 3px,transparent 3px 12px)}
-.band .arrows{position:absolute;inset:0;display:flex;justify-content:space-around;align-items:center;color:rgba(255,255,255,.45);font-size:18px;pointer-events:none}
+.band .arrows{position:absolute;inset:0;display:flex;justify-content:space-around;align-items:center;color:#fff;font-size:18px;pointer-events:none}
+.band .arrows span{opacity:.3;animation:arrowPulse 3.2s ease-in-out infinite;animation-delay:calc(var(--k) * .35s)}
+@keyframes arrowPulse{0%,100%{opacity:.22}40%{opacity:.7}}
+
+/* vehicles */
+.veh{position:absolute;left:calc(var(--w) * -1);animation:drive 9s linear infinite;pointer-events:none}
+.veh.car{background:var(--c);border-radius:7px 9px 9px 7px;box-shadow:0 2px 4px rgba(0,0,0,.35)}
+.veh.car::before{content:"";position:absolute;right:20%;top:13%;bottom:13%;width:17%;border-radius:3px 5px 5px 3px;background:rgba(28,40,52,.62)}
+.veh.car::after{content:"";position:absolute;left:11%;top:16%;bottom:16%;width:11%;border-radius:3px;background:rgba(28,40,52,.45)}
+.veh.rev{animation-name:driveRev;transform:scaleX(-1)}
+.veh.turning{animation-name:turnLeft}
+.veh.bike{width:var(--w);border-radius:5px;background:#f6f1e4;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.veh.bike::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:var(--buffer);box-shadow:0 0 0 1.5px #fff}
+.veh.parked{animation:parkIn .45s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(.5s + var(--k) * 90ms)}
+@keyframes drive{from{left:calc(var(--w) * -1)}to{left:100%}}
+@keyframes driveRev{from{left:100%}to{left:calc(var(--w) * -1)}}
+@keyframes turnLeft{
+  0%{left:calc(var(--w) * -1);transform:none;opacity:1}
+  45%{left:44%;transform:none;opacity:1}
+  52%{left:47%;transform:none}
+  62%{left:52%;transform:translateY(-45%) rotate(-38deg);opacity:1}
+  70%{left:55%;transform:translateY(-90%) rotate(-60deg);opacity:0}
+  100%{left:55%;opacity:0}
+}
+@keyframes parkIn{from{opacity:0;transform:translateY(-6px) scale(.85)}}
+
+/* intro: lanes sweep in from the left, labels slide in, flags drop onto the road */
+.road.intro .band{animation:sweep .75s cubic-bezier(.2,.75,.2,1) both;animation-delay:calc(var(--i) * 85ms)}
+.road.intro .road-labels>div{animation:labelIn .5s ease both;animation-delay:calc(120ms + var(--i) * 85ms)}
+.road.intro .flag .head{animation:flagDrop .65s cubic-bezier(.3,1.55,.5,1) both;animation-delay:calc(650ms + var(--i) * 140ms)}
+.road.intro .flag .pole{animation:poleGrow .45s ease-out both;animation-delay:calc(600ms + var(--i) * 140ms)}
+.road.intro .road-asph{animation:curbIn .5s ease both}
+@keyframes sweep{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes labelIn{from{opacity:0;transform:translateX(-10px)}}
+@keyframes flagDrop{from{opacity:0;transform:translateY(-34px)}}
+@keyframes poleGrow{from{transform:scaleY(0)}}
+@keyframes curbIn{from{border-color:transparent}}
+.road.morphing .band,.road.morphing .road-labels>div{transition:height .6s cubic-bezier(.2,.75,.2,1)}
+
+/* flags */
 .flag{all:unset;cursor:pointer;position:absolute;top:0;bottom:0;width:0;transform:translateX(-1px)}
-.flag .pole{position:absolute;top:30px;bottom:0;left:0;border-left:2px solid currentColor;opacity:.8}
-.flag .head{position:absolute;top:0;left:-15px;width:30px;height:30px;border-radius:8px 8px 8px 2px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;background:currentColor;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
-.flag .head span{color:#fff}
-.flag:hover .head{transform:translateY(-2px)}
-.flag.sel .head{outline:3px solid var(--text);outline-offset:2px}
-.flag:focus-visible .head{outline:3px solid var(--accent);outline-offset:2px}
+.flag .pole{position:absolute;top:30px;bottom:0;left:-1px;width:2px;background:currentColor;opacity:.85;transform-origin:top;transition:box-shadow .2s}
+.flag .head{position:absolute;top:0;left:-15px;width:30px;height:30px}
+.flag .face{width:100%;height:100%;border-radius:8px 8px 8px 2px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;background:currentColor;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.flag:hover .face{transform:translateY(-3px)}
+.flag.sel .face{outline:3px solid var(--text);outline-offset:2px;animation:bob 2.6s ease-in-out infinite}
+.flag.sel .pole{box-shadow:0 0 0 4px color-mix(in srgb,currentColor 18%,transparent),0 0 18px 6px color-mix(in srgb,currentColor 22%,transparent)}
+.flag:focus-visible .face{outline:3px solid var(--accent);outline-offset:2px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* tutorial */
+.help{all:unset;cursor:pointer;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:700;color:var(--muted);border:1.5px solid var(--line-strong);background:#fff}
+.help:hover{color:var(--accent);border-color:var(--accent)}
+.help:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tour{position:fixed;inset:0;z-index:50;pointer-events:none}
+.tour-spot{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(18,24,30,.55);animation:spotIn .45s cubic-bezier(.2,.7,.2,1) both}
+.tour-spot::after{content:"";position:absolute;inset:-3px;border-radius:18px;border:2.5px solid #fff;animation:ring 1.8s ease-out infinite}
+.tour-card{position:fixed;width:340px;pointer-events:auto;background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 18px 50px rgba(0,0,0,.28);animation:cardIn .5s .12s cubic-bezier(.2,.8,.2,1) both}
+.tour-card::before{content:"";position:absolute;top:-8px;left:var(--arrow,50%);width:16px;height:16px;margin-left:-8px;background:#fff;transform:rotate(45deg);border-radius:3px}
+.tour-card h3{font-size:17px;margin:4px 0 6px}
+.tour-card p{margin:0 0 14px;font-size:14px;color:var(--muted)}
+.tour-actions{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#174c70}
+.tour.leaving{animation:fadeOut .25s ease both}
+@keyframes spotIn{from{box-shadow:0 0 0 9999px rgba(18,24,30,0);transform:scale(1.08)}}
+@keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.12,1.5)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}}
+@keyframes fadeOut{to{opacity:0}}
+
+/* design switch */
+#app.fade-in{animation:fadeIn .38s cubic-bezier(.2,.7,.2,1)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  .veh:not(.parked){display:none}
+}
 .road-axis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:5px}
 .road-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--muted)}
 .station-panel{position:sticky;top:96px}
@@ -217,8 +287,19 @@ details.fold .body{padding:0 16px 14px}
       <button class="tab" role="tab" data-design="2"><span class="n">2</span>Report</button>
       <button class="tab" role="tab" data-design="3"><span class="n">3</span>Street first</button>
     </nav>
+    <button class="help" id="help" aria-label="Show the tutorial" title="Show the tutorial">?</button>
   </div>
 </header>
+
+<div id="tour" class="tour" hidden>
+  <div class="tour-spot" aria-hidden="true"></div>
+  <div class="tour-card" role="dialog" aria-modal="false" aria-labelledby="tour-title" aria-describedby="tour-text">
+    <div class="eyebrow">Welcome</div>
+    <h3 id="tour-title">Three prototype designs</h3>
+    <p id="tour-text">Click a design up here to view its prototype. Each one shows the same design record in a different way, so you can compare them side by side.</p>
+    <div class="tour-actions"><span class="small muted">You can reopen this with the <b>?</b> button.</span><button class="btn primary" id="tour-ok">Got it</button></div>
+  </div>
+</div>
 
 <main class="wrap" id="app" aria-live="polite"></main>
 
@@ -563,22 +644,53 @@ function worstStation(o){
   const st = stationsOf(o);
   return st.find(s => stationStatus(o,s) === "not_met") ?? st.find(s => stationStatus(o,s) === "indeterminate") ?? st[0] ?? null;
 }
+/* Traffic for the road viewer. Animation delays come from the clock, so vehicles
+   keep their place on the road when the view re-renders (e.g. clicking a flag). */
+const CAR_COLORS = ["#f4efe4","#e8b64a","#8db7d4","#d9876a","#b7c8a4","#ffffff","#c9b8dd"];
+function vehiclesHTML(rows, i){
+  const r = rows[i], t = r.e.type, h = r.h, now = performance.now()/1000;
+  const delay = (dur, frac) => `animation-duration:${dur}s;animation-delay:-${((now + frac*dur) % dur).toFixed(2)}s`;
+  /* travel direction: lanes before the turn lane go left→right, lanes after it go right→left */
+  const turnIdx = rows.findIndex(x => x.e.type === "turn_lane");
+  const carIdx = rows.map((x,k) => CAR.has(x.e.type) ? k : -1).filter(k => k >= 0);
+  const pivot = turnIdx >= 0 ? turnIdx : carIdx[Math.floor(carIdx.length/2)] ?? 0;
+  const rev = i > pivot;
+  if (t === "travel_lane"){
+    const ch = Math.min(30, h*.42), cw = ch*1.95;
+    return [0, .5].map((frac, k) => { const dur = 8 + (i*3 + k*5) % 4;
+      return `<span class="veh car ${rev?"rev":""}" style="--w:${cw}px;width:${cw}px;height:${ch}px;top:${(h-ch)/2}px;--c:${CAR_COLORS[(i*2+k) % CAR_COLORS.length]};${delay(dur, frac + i*.17)}"></span>`; }).join("");
+  }
+  if (t === "turn_lane"){
+    const ch = Math.min(30, h*.42), cw = ch*1.95;
+    return `<span class="veh car turning" style="--w:${cw}px;width:${cw}px;height:${ch}px;top:${(h-ch)/2}px;--c:${CAR_COLORS[4]};${delay(13, .1)}"></span>`;
+  }
+  if (t === "bike_lane" || t === "cycle_track"){
+    const bh = Math.min(10, h*.24);
+    return [0, .55].map((frac, k) => `<span class="veh bike" style="--w:26px;height:${bh}px;top:${(h-bh)/2 + (k ? h*.12 : -h*.08)}px;${delay(k ? 17 : 14, frac)}"></span>`).join("");
+  }
+  if (t === "parking_lane"){
+    const ch = Math.min(30, h*.5), cw = ch*1.95;
+    return [5, 21, 37, 58, 74, 90].map((x, k) => k === 3 ? "" :
+      `<span class="veh car parked" style="--k:${k};left:${x}%;width:${cw}px;height:${ch}px;top:${(h-ch)/2}px;--c:${CAR_COLORS[(k+2) % CAR_COLORS.length]}"></span>`).join("");
+  }
+  return "";
+}
 function roadHTML(els, o, flags){
   const PX = 7;  /* px per ft of width */
   const rows = els.map(e => { const w = elWidth(o, e); return {e, w, h:Math.max(24, (w ? w.mid*FT : 8)*PX)}; });
   const stations = flags ? stationsOf(o) : [];
   const len = Math.max(60, ...stations);
   const xp = s => 3 + 94 * s/len;
-  const labels = rows.map(r => `<div style="height:${r.h}px"><span>${typeInfo(r.e.type).label}</span><b>${fmtW(r.w)}</b></div>`).join("");
-  const bands = rows.map(r => {
+  const labels = rows.map((r,i) => `<div style="height:${r.h}px;--i:${i}"><span>${typeInfo(r.e.type).label}</span><b>${fmtW(r.w)}</b></div>`).join("");
+  const bands = rows.map((r,i) => {
     const t = typeInfo(r.e.type);
-    const arrows = r.e.type === "turn_lane" ? `<div class="arrows" aria-hidden="true"><span>↰</span><span>↰</span><span>↰</span></div>` : "";
-    return `<div class="band ${CAR.has(r.e.type)?"car":""} ${r.e.type==="buffer"?"buffer-b":""} ${r.e.derived?"derived":""}" style="height:${r.h}px;background-color:${t.color}">${arrows}</div>`;
+    const arrows = r.e.type === "turn_lane" ? `<div class="arrows" aria-hidden="true">${[0,1,2,3].map(k => `<span style="--k:${k}">↰</span>`).join("")}</div>` : "";
+    return `<div class="band ${CAR.has(r.e.type)?"car":""} ${r.e.type==="buffer"?"buffer-b":""} ${r.e.derived?"derived":""}" data-t="${esc(r.e.type)}" style="--i:${i};height:${r.h}px;background-color:${t.color}">${arrows}${vehiclesHTML(rows, i)}</div>`;
   }).join("");
-  const fl = stations.map(s => { const st = stateOf(stationStatus(o, s));
-    return `<button class="flag ${S.station===s?"sel":""}" style="left:${xp(s)}%;color:var(--${st.tok})" data-act="station" data-st="${s}" data-key="st-${s}" aria-label="Station ${ft(s,0)} ft: ${st.word}" aria-pressed="${S.station===s}">
-      <span class="pole"></span><span class="head"><span>${st.icon}</span></span></button>`; }).join("");
-  return `<div class="road"><div class="road-labels" style="padding-top:${flags ? 48 : 4}px">${labels}</div>
+  const fl = stations.map((s,i) => { const st = stateOf(stationStatus(o, s));
+    return `<button class="flag ${S.station===s?"sel":""}" style="--i:${i};left:${xp(s)}%;color:var(--${st.tok})" data-act="station" data-st="${s}" data-key="st-${s}" aria-label="Station ${ft(s,0)} ft: ${st.word}" aria-pressed="${S.station===s}">
+      <span class="pole"></span><span class="head"><span class="face">${st.icon}</span></span></button>`; }).join("");
+  return `<div class="road" data-road="${flags ? "main" : "before"}"><div class="road-labels" style="padding-top:${flags ? 48 : 4}px">${labels}</div>
     <div><div class="road-body" style="padding-top:${flags ? 44 : 0}px"><div class="road-asph">${bands}</div>${fl}</div>
     ${flags ? `<div class="road-axis"><span>0 ft</span><span>${ft(len/2,0)} ft</span><span>${ft(len,0)} ft</span></div>` : ""}</div></div>`;
 }
@@ -632,15 +744,40 @@ function render(){
   const d = DESIGNS[S.design];
   const intro = `<div class="design-intro no-print"><h2>Design ${S.design}: ${d.name}</h2><span class="muted small">${d.blurb}</span></div>`;
   $("app").innerHTML = intro + (S.design === 1 ? design1() : S.design === 2 ? design2() : design3());
+  animateRoads();
   if (key) document.querySelector(`[data-key="${key}"]`)?.focus();
 }
-function setDesign(n){ S.design = n; history.replaceState(null, "", `#design-${n}`); render(); }
+/* Road viewer motion. "intro": lanes sweep in, flags drop. "morph": lane widths
+   glide from the previous option's widths to the new one's. null: no motion. */
+const prevRoads = {};
+function animateRoads(){
+  const mode = S.roadAnim; S.roadAnim = null;
+  document.querySelectorAll(".road[data-road]").forEach(r => {
+    const k = r.dataset.road, bands = [...r.querySelectorAll(".band")], labs = [...r.querySelectorAll(".road-labels>div")];
+    const types = bands.map(b => b.dataset.t).join(), hs = bands.map(b => b.style.height), p = prevRoads[k];
+    if (mode === "intro" || (mode && (!p || p.types !== types))) r.classList.add("intro");
+    else if (mode === "morph" && p.hs.join() !== hs.join()){
+      bands.forEach((b,i) => { b.style.height = labs[i].style.height = p.hs[i]; });
+      r.offsetHeight;  /* commit the old heights, then transition to the new ones */
+      r.classList.add("morphing");
+      bands.forEach((b,i) => { b.style.height = labs[i].style.height = hs[i]; });
+    }
+    prevRoads[k] = {types, hs};
+  });
+}
+function setDesign(n){
+  if (n === S.design) return;
+  S.design = n; S.roadAnim = "intro";
+  history.replaceState(null, "", `#design-${n}`);
+  render();
+  const app = $("app"); app.classList.remove("fade-in"); app.offsetWidth; app.classList.add("fade-in");
+}
 
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => setDesign(+t.dataset.design));
 $("app").addEventListener("click", e => {
   const t = e.target.closest("[data-act]"); if (!t) return;
   const a = t.dataset.act;
-  if (a === "opt"){ S.sel = t.dataset.id; S.station = worstStation(current()); render(); }
+  if (a === "opt"){ if (t.dataset.id !== S.sel) S.roadAnim = "morph"; S.sel = t.dataset.id; S.station = worstStation(current()); render(); }
   else if (a === "station"){ S.station = +t.dataset.st; render(); }
   else if (a === "close"){ S.station = null; render(); }
   else if (a === "print") window.print();
@@ -662,13 +799,46 @@ async function load(i){
     if (S.demo !== i) return;
     S.rec = rec; S.phase = "ok";
     const f = rec.options.length ? focusOption(rec) : null;
-    S.sel = f ? f.id : null; S.station = f ? worstStation(f) : null;
+    S.sel = f ? f.id : null; S.station = f ? worstStation(f) : null; S.roadAnim = "intro";
   }catch(err){
     if (S.demo !== i) return;
     S.phase = "error"; S.err = `Couldn't read this file (${err.message}). It may be missing or not a valid design record.`;
   }
   render();
 }
+/* ---------- first-visit tutorial ---------- */
+const TOUR_KEY = "sda-tour-seen-v1";
+function placeTour(){
+  const r = document.querySelector(".tabs").getBoundingClientRect(), pad = 8;
+  const spot = document.querySelector(".tour-spot"), card = document.querySelector(".tour-card");
+  Object.assign(spot.style, {left:`${r.left-pad}px`, top:`${r.top-pad}px`, width:`${r.width+pad*2}px`, height:`${r.height+pad*2}px`});
+  const cw = Math.min(340, innerWidth - 24), cx = r.left + r.width/2;
+  const left = Math.max(12, Math.min(innerWidth - cw - 12, cx - cw/2));
+  Object.assign(card.style, {width:`${cw}px`, left:`${left}px`, top:`${r.bottom + pad + 16}px`});
+  card.style.setProperty("--arrow", `${cx - left}px`);
+}
+function openTour(){
+  const t = $("tour"); t.hidden = false; t.classList.remove("leaving");
+  placeTour(); $("tour-ok").focus();
+  addEventListener("resize", placeTour);
+  setTimeout(() => document.addEventListener("click", closeOnClick, true), 0);
+}
+function closeTour(){
+  const t = $("tour"); if (t.hidden) return;
+  try { localStorage.setItem(TOUR_KEY, "1"); } catch {}
+  removeEventListener("resize", placeTour);
+  document.removeEventListener("click", closeOnClick, true);
+  t.classList.add("leaving");
+  setTimeout(() => { t.hidden = true; }, 250);
+}
+/* any click closes the tutorial; a click on a design button also switches design */
+function closeOnClick(){ closeTour(); }
+$("tour-ok").onclick = closeTour;
+$("help").onclick = e => { e.stopPropagation(); openTour(); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeTour(); });
+let seen = false; try { seen = !!localStorage.getItem(TOUR_KEY); } catch {}
+if (!seen) (document.fonts?.ready ?? Promise.resolve()).then(() => setTimeout(openTour, 350));
+
 const m = location.hash.match(/design-([123])/);
 if (m) S.design = +m[1];
 if (location.protocol === "file:"){
